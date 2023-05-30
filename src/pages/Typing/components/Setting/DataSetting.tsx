@@ -112,6 +112,31 @@ export default function DataSetting() {
           导入数据
         </button>
       </div>
+
+      {/* <webhook> */}
+      <div className={styles.section}>
+        <span className={styles.sectionLabel}>Webhook</span>
+        <span className={styles.sectionDescription}>
+          请注意，导入数据将<strong className="text-sm font-bold text-red-500"> 完全覆盖 </strong>当前数据。请谨慎操作。
+        </span>
+        <div className="flex h-10 w-full items-center justify-start px-5">
+          <input
+            id="webhook"
+            name="webhook"
+            className="focus:ring-indiago-300 flex w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1  ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-300"
+          />
+        </div>
+        <button
+          className="btn-primary ml-4 disabled:bg-gray-300"
+          type="button"
+          onClick={onClickImport}
+          disabled={isImporting}
+          title="导入数据"
+        >
+          导入数据
+        </button>
+      </div>
+      {/* </webhook> */}
     </div>
   )
 }
