@@ -6,12 +6,12 @@ import WordChip from './WordChip'
 import styles from './index.module.css'
 import Tooltip from '@/components/Tooltip'
 import { currentChapterAtom, currentDictInfoAtom, infoPanelStateAtom, randomConfigAtom } from '@/store'
-import { InfoPanelType } from '@/typings'
-import { WordWithIndex } from '@/typings'
+import type { InfoPanelType } from '@/typings'
+import type { WordWithIndex } from '@/typings'
 import { recordOpenInfoPanelAction } from '@/utils'
 import { Transition } from '@headlessui/react'
 import { useAtom, useAtomValue, useSetAtom } from 'jotai'
-import { useCallback, useContext, useMemo } from 'react'
+import { useCallback, useContext, useEffect, useMemo } from 'react'
 import { useHotkeys } from 'react-hotkeys-hook'
 import IconCoffee from '~icons/mdi/coffee'
 import IconXiaoHongShu from '~icons/my-icons/xiaohongshu'
@@ -27,6 +27,11 @@ const ResultScreen = () => {
   const [currentChapter, setCurrentChapter] = useAtom(currentChapterAtom)
   const setInfoPanelState = useSetAtom(infoPanelStateAtom)
   const randomConfig = useAtomValue(randomConfigAtom)
+
+  useEffect(() => {
+    // tick a zero timer to calc the stats
+    dispatch({ type: TypingStateActionType.TICK_TIMER, addTime: 0 })
+  }, [dispatch])
 
   const wrongWords = useMemo(() => {
     const wordList = state.chapterData.wrongWordIndexes.map((index) => state.chapterData.words.find((word) => word.index === index))
@@ -91,7 +96,9 @@ const ResultScreen = () => {
 
   useHotkeys(
     'space',
-    () => {
+    (e) => {
+      // 火狐浏览器的阻止事件无效，会导致按空格键后 再次输入正确的第一个字母会报错
+      e.stopPropagation()
       repeatButtonHandler()
     },
     { preventDefault: true },

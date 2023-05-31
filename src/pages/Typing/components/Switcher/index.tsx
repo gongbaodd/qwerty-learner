@@ -1,4 +1,6 @@
 import { TypingContext, TypingStateActionType } from '../../store'
+import HandPositionIllustration from '../HandPositionIllustration'
+import LoopWordSwitcher from '../LoopWordSwitcher'
 import Setting from '../Setting'
 import SoundSwitcher from '../SoundSwitcher'
 import Tooltip from '@/components/Tooltip'
@@ -12,8 +14,6 @@ import IconMoon from '~icons/heroicons/moon-solid'
 import IconSun from '~icons/heroicons/sun-solid'
 import IconLanguage from '~icons/tabler/language'
 import IconLanguageOff from '~icons/tabler/language-off'
-import IconRepeatOff from '~icons/tabler/repeat-off'
-import IconRepeatOnce from '~icons/tabler/repeat-once'
 
 export default function Switcher() {
   const [isOpenDarkMode, setIsOpenDarkMode] = useAtom(isOpenDarkModeAtom)
@@ -35,12 +35,6 @@ export default function Switcher() {
     }
   }
 
-  const changeLoopSingleWordState = () => {
-    if (dispatch) {
-      dispatch({ type: TypingStateActionType.TOGGLE_IS_LOOP_SINGLE_WORD })
-    }
-  }
-
   useHotkeys(
     'ctrl+v',
     () => {
@@ -59,17 +53,9 @@ export default function Switcher() {
     [],
   )
   useHotkeys(
-    'ctrl+t',
+    'ctrl+shift+v',
     () => {
       changeTransVisibleState()
-    },
-    { enableOnFormTags: true, preventDefault: true },
-    [],
-  )
-  useHotkeys(
-    'ctrl+l',
-    () => {
-      changeLoopSingleWordState()
     },
     { enableOnFormTags: true, preventDefault: true },
     [],
@@ -81,19 +67,10 @@ export default function Switcher() {
         <SoundSwitcher />
       </Tooltip>
 
-      <Tooltip className="h-7 w-7" content="开关单个单词循环（Ctrl + L）">
-        <button
-          className={`p-[2px] ${state?.isLoopSingleWord ? 'text-indigo-500' : 'text-gray-500'} text-lg focus:outline-none`}
-          type="button"
-          onClick={(e) => {
-            changeLoopSingleWordState()
-            e.currentTarget.blur()
-          }}
-          aria-label="开关单个单词循环（Ctrl + L）"
-        >
-          {state?.isLoopSingleWord ? <IconRepeatOnce /> : <IconRepeatOff />}
-        </button>
+      <Tooltip className="h-7 w-7" content="设置单个单词循环">
+        <LoopWordSwitcher />
       </Tooltip>
+
       <Tooltip className="h-7 w-7" content="开关英语显示（Ctrl + V）">
         <button
           className={`p-[2px] ${state?.isWordVisible ? 'text-indigo-500' : 'text-gray-500'} text-lg focus:outline-none`}
@@ -107,7 +84,7 @@ export default function Switcher() {
           {state?.isWordVisible ? <IconEye className="icon" /> : <IconEyeSlash className="icon" />}
         </button>
       </Tooltip>
-      <Tooltip className="h-7 w-7" content="开关释义显示（Ctrl + T）">
+      <Tooltip className="h-7 w-7" content="开关释义显示（Ctrl + Shift + V）">
         <button
           className={`p-[2px] ${state?.isTransVisible ? 'text-indigo-500' : 'text-gray-500'} text-lg focus:outline-none`}
           type="button"
@@ -133,7 +110,9 @@ export default function Switcher() {
           {isOpenDarkMode ? <IconMoon className="icon" /> : <IconSun className="icon" />}
         </button>
       </Tooltip>
-
+      <Tooltip className="h-7 w-7" content="指法图示">
+        <HandPositionIllustration></HandPositionIllustration>
+      </Tooltip>
       <Tooltip content="设置">
         <Setting />
       </Tooltip>

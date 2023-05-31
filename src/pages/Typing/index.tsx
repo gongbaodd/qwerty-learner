@@ -1,12 +1,14 @@
 import Layout from '../../components/Layout'
-import Progress from './components/Progress'
 import PronunciationSwitcher from './components/PronunciationSwitcher'
 import ResultScreen from './components/ResultScreen'
 import Speed from './components/Speed'
+import StartButton from './components/StartButton'
 import Switcher from './components/Switcher'
+import WordList from './components/WordList'
 import WordPanel from './components/WordPanel'
+import { useConfetti } from './hooks/useConfetti'
 import { useWordList } from './hooks/useWordList'
-import { initialState, TypingContext, typingReducer, TypingStateActionType } from './store'
+import { TypingContext, TypingStateActionType, initialState, typingReducer } from './store'
 import Header from '@/components/Header'
 import StarCard from '@/components/StarCard'
 import Tooltip from '@/components/Tooltip'
@@ -16,8 +18,8 @@ import { IsDesktop, isLegal } from '@/utils'
 import { useSaveChapterRecord } from '@/utils/db'
 import { useMixPanelChapterLogUploader } from '@/utils/mixpanel'
 import { useAtom, useAtomValue } from 'jotai'
-import React, { useCallback, useEffect, useState } from 'react'
-import { useHotkeys } from 'react-hotkeys-hook'
+import type React from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useImmerReducer } from 'use-immer'
 
@@ -33,6 +35,8 @@ const App: React.FC = () => {
 
   const chapterLogUploader = useMixPanelChapterLogUploader(state)
   const saveChapterRecord = useSaveChapterRecord()
+
+  const typingElementRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     // 检测用户设备
@@ -53,15 +57,10 @@ const App: React.FC = () => {
     }
   }, [currentDictId, setCurrentDictId])
 
-  const onToggleIsTyping = useCallback(() => {
-    !isLoading && dispatch({ type: TypingStateActionType.TOGGLE_IS_TYPING })
-  }, [isLoading, dispatch])
-
   const skipWord = useCallback(() => {
     dispatch({ type: TypingStateActionType.SKIP_WORD })
   }, [dispatch])
 
-  useHotkeys('enter', onToggleIsTyping, { enableOnFormTags: true, preventDefault: true }, [onToggleIsTyping])
   useEffect(() => {
     const onBlur = () => {
       dispatch({ type: TypingStateActionType.SET_IS_TYPING, payload: false })
@@ -78,6 +77,8 @@ const App: React.FC = () => {
   }, [state.chapterData.words])
 
   useEffect(() => {
+    if (!typingElementRef.current) return
+
     if (!state.isTyping) {
       const onKeyDown = (e: KeyboardEvent) => {
         if (!isLoading && e.key !== 'Enter' && (isLegal(e.key) || e.key === ' ') && !e.altKey && !e.ctrlKey && !e.metaKey) {
@@ -85,9 +86,9 @@ const App: React.FC = () => {
           dispatch({ type: TypingStateActionType.SET_IS_TYPING, payload: true })
         }
       }
-      window.addEventListener('keydown', onKeyDown)
+      typingElementRef.current.addEventListener('keydown', onKeyDown)
 
-      return () => window.removeEventListener('keydown', onKeyDown)
+      return () => typingElementRef.current?.removeEventListener('keydown', onKeyDown)
     }
   }, [state.isTyping, isLoading, dispatch])
 
@@ -122,6 +123,8 @@ const App: React.FC = () => {
     return () => clearInterval(intervalId)
   }, [state.isTyping, dispatch])
 
+  useConfetti(state.isFinished)
+
   return (
     <TypingContext.Provider value={{ state: state, dispatch }}>
       <StarCard />
@@ -138,18 +141,7 @@ const App: React.FC = () => {
           </Tooltip>
           <PronunciationSwitcher />
           <Switcher />
-          <Tooltip content="快捷键 Enter">
-            <button
-              className={`${
-                state.isTyping ? 'bg-gray-400 shadow-gray-200 dark:bg-gray-700' : 'bg-indigo-600 shadow-indigo-200'
-              } btn-primary w-20 shadow transition-colors duration-200`}
-              type="button"
-              onClick={onToggleIsTyping}
-              aria-label={state.isTyping ? '暂停' : '开始'}
-            >
-              <span className="font-medium">{state.isTyping ? 'Pause' : 'Start'}</span>
-            </button>
-          </Tooltip>
+          <StartButton isLoading={isLoading} />
           <Tooltip content="跳过该词">
             <button
               className={`${
@@ -161,34 +153,25 @@ const App: React.FC = () => {
             </button>
           </Tooltip>
         </Header>
-        <div className="container mx-auto flex h-full flex-1 flex-col items-center justify-center pb-20">
+        <div ref={typingElementRef} className="container mx-auto flex h-full flex-1 flex-col items-center justify-center pb-20">
           <div className="container relative mx-auto flex h-full flex-col items-center">
-            <div className="h-1/3"></div>
-            {isLoading ? (
-              <div className="flex flex-col items-center justify-center ">
-                <div
-                  className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid  border-indigo-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-                  role="status"
-                ></div>
-              </div>
-            ) : (
-              !state.isFinished && (
-                <>
-                  {state.isTyping ? (
-                    <>
-                      <WordPanel />
-                      <Progress />
-                    </>
-                  ) : (
-                    <div className="animate-pulse select-none pb-4 text-xl text-gray-600 dark:text-gray-50">按任意键开始</div>
-                  )}
-                </>
-              )
-            )}
+            <div className="container flex flex-grow items-center justify-center">
+              {isLoading ? (
+                <div className="flex flex-col items-center justify-center ">
+                  <div
+                    className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid  border-indigo-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                    role="status"
+                  ></div>
+                </div>
+              ) : (
+                !state.isFinished && <WordPanel />
+              )}
+            </div>
             <Speed />
           </div>
         </div>
       </Layout>
+      <WordList />
     </TypingContext.Provider>
   )
 }

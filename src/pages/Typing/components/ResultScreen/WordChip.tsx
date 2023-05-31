@@ -1,5 +1,5 @@
 import usePronunciationSound from '@/hooks/usePronunciation'
-import { WordWithIndex } from '@/typings'
+import type { WordWithIndex } from '@/typings'
 import { flip, offset, shift, useFloating, useHover, useInteractions, useRole } from '@floating-ui/react'
 import { useCallback, useState } from 'react'
 
@@ -24,7 +24,7 @@ export default function WordChip({ word }: { word: WordWithIndex }) {
     <>
       <button
         ref={refs.setReference}
-        className="word-chip select-none"
+        className="word-chip select-all"
         {...getReferenceProps()}
         type="button"
         onClick={onClickWord}
