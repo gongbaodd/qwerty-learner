@@ -40,7 +40,7 @@ export default function Switcher() {
     () => {
       changeWordVisibleState()
     },
-    { enableOnFormTags: true, preventDefault: true },
+    { preventDefault: true },
     [],
   )
 
@@ -49,7 +49,7 @@ export default function Switcher() {
     () => {
       changeDarkModeState()
     },
-    { enableOnFormTags: true, preventDefault: true },
+    { preventDefault: true },
     [],
   )
   useHotkeys(
@@ -57,7 +57,7 @@ export default function Switcher() {
     () => {
       changeTransVisibleState()
     },
-    { enableOnFormTags: true, preventDefault: true },
+    { preventDefault: true },
     [],
   )
 
