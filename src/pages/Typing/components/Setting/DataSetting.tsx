@@ -1,10 +1,9 @@
+import WebhookSetting from './WebhookSetting'
 import styles from './index.module.css'
-import { webhookUrl as initialWebhookUrl } from '@/store/webhook'
 import type { ExportProgress, ImportProgress } from '@/utils/db/data-export'
 import { exportDatabase, importDatabase } from '@/utils/db/data-export'
 import * as Progress from '@radix-ui/react-progress'
-import { useAtom } from 'jotai'
-import { useCallback, useState, useRef } from 'react'
+import { useCallback, useState } from 'react'
 
 export default function DataSetting() {
   const [isExporting, setIsExporting] = useState(false)
@@ -12,10 +11,6 @@ export default function DataSetting() {
 
   const [isImporting, setIsImporting] = useState(false)
   const [importProgress, setImportProgress] = useState(0)
-
-  const [isWebhookSaving, setIsWebhookSaving] = useState(false)
-  const [webhookUrl, setWebhookUrl] = useAtom(initialWebhookUrl)
-  const webhookUrlRef = useRef<HTMLInputElement>(null)
 
   const exportProgressCallback = useCallback(({ totalRows, completedRows, done }: ExportProgress) => {
     if (done) {
@@ -57,11 +52,6 @@ export default function DataSetting() {
   const onClickImport = useCallback(() => {
     importDatabase(onStartImport, importProgressCallback)
   }, [importProgressCallback, onStartImport])
-
-  const onClickSaveWebhook = useCallback(async () => {
-    setIsWebhookSaving(true)
-    setWebhookUrl(webhookUrlRef.current?.value || '')
-  }, [])
 
   return (
     <div className={styles.tabContent}>
@@ -125,32 +115,7 @@ export default function DataSetting() {
         </button>
       </div>
 
-      {/* <webhook> */}
-      <div className={styles.section}>
-        <span className={styles.sectionLabel}>GraphQL Webhook</span>
-        <span className={styles.sectionDescription}>
-          请注意，本地数据将被<strong className="text-sm font-bold text-red-500"> 完全覆盖 </strong>当前数据。请谨慎操作。
-        </span>
-        <div className="flex h-10 w-full items-center justify-start px-5">
-          <input
-            id="webhook"
-            name="webhook"
-            className="focus:ring-indiago-300 block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 shadow-sm ring-1  ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-300"
-            placeholder="请输入 GraphQL 地址"
-            ref={webhookUrlRef}
-          />
-        </div>
-        <button
-          className="btn-primary ml-4 disabled:bg-gray-300"
-          type="button"
-          onClick={onClickSaveWebhook}
-          disabled={isWebhookSaving}
-          title="保存链接"
-        >
-          保存链接
-        </button>
-      </div>
-      {/* </webhook> */}
+      <WebhookSetting />
     </div>
   )
 }

@@ -2,6 +2,11 @@
 # yarn lockfile v1
 
 
+"@0no-co/graphql.web@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.npmmirror.com/@0no-co/graphql.web/-/graphql.web-1.0.1.tgz#db3da0d2cd41548b50f0583c0d2f4743c767e56b"
+  integrity sha512-6Yaxyv6rOwRkLIvFaL0NrLDgfNqC/Ng9QOPmTmlqW4mORXMEKmh5NYGkIvvt5Yw8fZesnMAqkj8cIqTj8f40cQ==
+
 "@adobe/css-tools@^4.0.1":
   version "4.2.0"
   resolved "https://registry.npmmirror.com/@adobe/css-tools/-/css-tools-4.2.0.tgz#e1a84fca468f4b337816fcb7f0964beb620ba855"
@@ -1953,6 +1958,14 @@
   dependencies:
     "@typescript-eslint/types" "5.59.6"
     eslint-visitor-keys "^3.3.0"
+
+"@urql/core@^4.0.8":
+  version "4.0.8"
+  resolved "https://registry.npmmirror.com/@urql/core/-/core-4.0.8.tgz#acd13c0b319b71f982840f8b348d2820703b2131"
+  integrity sha512-8aKNAAqKqnzcE6lcUA48JepghXZC72hZePXz5sYZ//oCPodQPRcBpj+eO1QTq2t0QM32B+grzYj8xEGukgBiXQ==
+  dependencies:
+    "@0no-co/graphql.web" "^1.0.1"
+    wonka "^6.3.2"
 
 "@vitejs/plugin-react@^3.1.0":
   version "3.1.0"
@@ -5621,6 +5634,11 @@ which@^2.0.1:
   integrity sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA==
   dependencies:
     isexe "^2.0.0"
+
+wonka@^6.3.2:
+  version "6.3.2"
+  resolved "https://registry.npmmirror.com/wonka/-/wonka-6.3.2.tgz#6f32992b332251d7b696b038990f4dc284b3b33d"
+  integrity sha512-2xXbQ1LnwNS7egVm1HPhW2FyKrekolzhpM3mCwXdQr55gO+tAiY76rhb32OL9kKsW8taj++iP7C6hxlVzbnvrw==
 
 word-wrap@^1.2.3:
   version "1.2.3"
