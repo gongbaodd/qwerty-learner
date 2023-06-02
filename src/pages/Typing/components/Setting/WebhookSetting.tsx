@@ -1,68 +1,37 @@
 import styles from './index.module.css'
-import { initialWebhookUrl, intialUrqlClient } from '@/store/webhook'
-import { Client, cacheExchange, fetchExchange, gql } from '@urql/core'
+import { clientAtom } from '@/store/webhook'
 import { useAtom } from 'jotai'
 import type { FC } from 'react'
-import { useCallback, useRef, useState } from 'react'
-
-const query = gql/* GraphQL */ `
-  query MyQuery {
-    chapters {
-      chapter
-      correctCount
-      correctWordIndexes
-      dict
-      time
-      timeStamp
-      wordCount
-      wordNumber
-      wordRecordIds
-      wrongCount
-    }
-    words {
-      chapter
-      dict
-      mistakes {
-        index
-        mistakes
-      }
-      timeStamp
-      timing
-      word
-      wrongCount
-    }
-  }
-`
+import { useEffect } from 'react'
+import type { ChangeEvent } from 'react'
+import { useCallback, useState } from 'react'
 
 const WebhookSetting: FC = () => {
   const [isWebhookSaving, setIsWebhookSaving] = useState(false)
-  const [_webhookUrl, setWebhookUrl] = useAtom(initialWebhookUrl)
-  const [_urqlClient, setUrqlClient] = useAtom(intialUrqlClient)
-  const webhookUrlRef = useRef<HTMLInputElement>(null)
   const [isError, setIsError] = useState(false)
+  const [webhook, setWebhook] = useAtom(clientAtom)
+  const [url, setUrl] = useState('')
+  const onInput = useCallback((e: ChangeEvent<HTMLInputElement>) => {
+    setUrl(e.target.value)
+  }, [])
+
+  useEffect(() => {
+    setUrl(webhook?.host || '')
+  }, [webhook])
 
   const onClickSaveWebhook = useCallback(async () => {
-    const url = webhookUrlRef.current?.value || ''
     if (url) {
       setIsWebhookSaving(true)
 
-      const client = new Client({
-        url,
-        exchanges: [cacheExchange, fetchExchange],
-      })
-
-      const result = await client.query(query, {}).toPromise()
-
-      setIsWebhookSaving(false)
-
-      if (result.error) {
+      try {
+        await setWebhook(url)
+      } catch (error) {
         setIsError(true)
+        setIsWebhookSaving(false)
         return
       }
-
+      setIsWebhookSaving(false)
       setIsError(false)
-      setUrqlClient(client)
-      setWebhookUrl(url)
     }
   }, [])
 
@@ -79,7 +48,8 @@ const WebhookSetting: FC = () => {
           type="url"
           className="focus:ring-indiago-300 block w-full rounded-md border-0 py-1.5 pl-7 pr-20 text-gray-900 shadow-sm ring-1  ring-inset placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-300"
           placeholder="请输入 GraphQL 地址"
-          ref={webhookUrlRef}
+          value={url}
+          onChange={onInput}
         />
       </div>
       {isError && (
