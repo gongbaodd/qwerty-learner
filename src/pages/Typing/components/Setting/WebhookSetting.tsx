@@ -16,13 +16,13 @@ const WebhookSetting: FC = () => {
   }, [])
 
   useEffect(() => {
+    console.log('webhook', webhook)
     setUrl(webhook?.host || '')
   }, [webhook])
 
   const onClickSaveWebhook = useCallback(async () => {
     if (url) {
       setIsWebhookSaving(true)
-
       try {
         await setWebhook(url)
       } catch (error) {
@@ -33,7 +33,7 @@ const WebhookSetting: FC = () => {
       setIsWebhookSaving(false)
       setIsError(false)
     }
-  }, [])
+  }, [url])
 
   return (
     <div className={styles.section}>
