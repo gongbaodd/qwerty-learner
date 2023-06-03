@@ -3,6 +3,7 @@ import HandPositionIllustration from '../HandPositionIllustration'
 import LoopWordSwitcher from '../LoopWordSwitcher'
 import Setting from '../Setting'
 import SoundSwitcher from '../SoundSwitcher'
+import { WebhookState } from './Webhook'
 import Tooltip from '@/components/Tooltip'
 import { isOpenDarkModeAtom } from '@/store'
 import { useAtom } from 'jotai'
@@ -112,6 +113,9 @@ export default function Switcher() {
       </Tooltip>
       <Tooltip className="h-7 w-7" content="指法图示">
         <HandPositionIllustration></HandPositionIllustration>
+      </Tooltip>
+      <Tooltip className="h-7 w-7" content="云同步">
+        <WebhookState />
       </Tooltip>
       <Tooltip content="设置">
         <Setting />

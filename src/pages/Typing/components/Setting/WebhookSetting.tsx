@@ -16,7 +16,6 @@ const WebhookSetting: FC = () => {
   }, [])
 
   useEffect(() => {
-    console.log('webhook', webhook)
     setUrl(webhook?.host || '')
   }, [webhook])
 
@@ -37,7 +36,7 @@ const WebhookSetting: FC = () => {
 
   return (
     <div className={styles.section}>
-      <span className={styles.sectionLabel}>GraphQL Webhook</span>
+      <span className={styles.sectionLabel}>云同步</span>
       <span className={styles.sectionDescription}>
         请注意，本地数据将被<strong className="text-sm font-bold text-red-500"> 完全覆盖 </strong>当前数据。请谨慎操作。
       </span>
