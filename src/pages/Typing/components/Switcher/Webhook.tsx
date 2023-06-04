@@ -14,15 +14,13 @@ export const WebhookState: FC = () => {
   }, [])
 
   return (
-    <button>
-      <button
-        className={`p-[2px] text-lg ${webhook.host ? 'text-indigo-500' : 'text-gray-500'} focus:outline-none`}
-        type="button"
-        onClick={handleClick}
-        aria-label="查看云同步设置"
-      >
-        <IconCloud className="icon" />
-      </button>
+    <button
+      className={`p-[2px] text-lg ${webhook.host ? 'text-indigo-500' : 'text-gray-500'} focus:outline-none`}
+      type="button"
+      onClick={handleClick}
+      aria-label="查看云同步设置"
+    >
+      <IconCloud className="icon" />
     </button>
   )
 }

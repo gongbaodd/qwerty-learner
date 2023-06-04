@@ -14,10 +14,11 @@ import StarCard from '@/components/StarCard'
 import Tooltip from '@/components/Tooltip'
 import { idDictionaryMap } from '@/resources/dictionary'
 import { currentChapterAtom, currentDictIdAtom, currentDictInfoAtom, randomConfigAtom } from '@/store'
+import { addChapterAtom, addChapterSelector } from '@/store/webhook'
 import { IsDesktop, isLegal } from '@/utils'
 import { useSaveChapterRecord } from '@/utils/db'
 import { useMixPanelChapterLogUploader } from '@/utils/mixpanel'
-import { useAtom, useAtomValue } from 'jotai'
+import { useAtom, useAtomValue, useSetAtom } from 'jotai'
 import type React from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { NavLink } from 'react-router-dom'
@@ -35,6 +36,7 @@ const App: React.FC = () => {
 
   const chapterLogUploader = useMixPanelChapterLogUploader(state)
   const saveChapterRecord = useSaveChapterRecord()
+  const saveChapterWebhook = useSetAtom(addChapterAtom)
 
   const typingElementRef = useRef<HTMLDivElement>(null)
 
@@ -108,6 +110,11 @@ const App: React.FC = () => {
     if (state.isFinished && !state.isSavingRecord) {
       chapterLogUploader()
       saveChapterRecord(state)
+      saveChapterWebhook({
+        ...addChapterSelector(state),
+        dict: currentDictId,
+        chapter: currentChapter,
+      })
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps

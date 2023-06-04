@@ -1,13 +1,13 @@
-import { IChapterRecord, IWordRecord } from '@/utils/db/record'
+import { TypingState } from '@/pages/Typing/store'
+import { getUTCUnixTimestamp } from '@/utils'
+import type { IChapterRecord, IWordRecord, LetterMistakes } from '@/utils/db/record'
 import { Client, cacheExchange, fetchExchange, gql } from '@urql/core'
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
 
 type ICharpter = IChapterRecord
 type IMistakes = { index: number; mistakes: string[] }
-type IWord = Exclude<IWordRecord, 'mistakes'> & { mistakes: IMistakes[] }
-
-const CLIENT_NOT_READY = 'client is not ready'
+type IWord = Omit<IWordRecord, 'mistakes'> & { mistakes: IMistakes[] }
 
 const initialWebhookUrl = atomWithStorage('webhookUrl', '')
 
@@ -41,43 +41,34 @@ const query = gql/* GraphQL */ `
     }
   }
 `
-export const queryAtom = atom(async (_get) => {
-  if (!client) throw new Error(CLIENT_NOT_READY)
+export const queryAtom = atom(null, async (get) => {
+  const host = get(initialWebhookUrl)
+
+  if (!host) return
+
+  if (!client) client = createClient(host)
 
   const result = await client.query<{ chapters: ICharpter[]; words: IWord[] }>(query, {}).toPromise()
 
   if (result.error) {
     throw result.error
   }
-
-  return { chapters: result.data?.chapters || [], words: result.data?.words || [] }
 })
 
 const addWord = gql/* GraphQL */ `
-  input WordInput {
-    word: String!
-    timeStamp: Int!
-    dict: String!
-    chapter: Int
-    timing: [Int!]!
-    wrongCount: Int!
-    mistakes: [LetterMistakesInput!]!
-  }
-
-  input LetterMistakesInput {
-    index: Int!
-    mistakes: [String!]!
-  }
-
-  mutation MyMutation($word: WordInput!) {
-    addWord(input: $word) {
+  mutation AddWord($input: WordInput!) {
+    addWord(input: $input) {
       word
     }
   }
 `
 
-export const addWordAtom = atom(null, async (_get, _set, input: IWord) => {
-  if (!client) throw new Error(CLIENT_NOT_READY)
+export const addWordAtom = atom(null, async (get, _set, input: IWord) => {
+  const host = get(initialWebhookUrl)
+  if (!host) return
+  if (!client) client = createClient(host)
+
+  console.log(input)
 
   const result = await client.mutation<Pick<IWord, 'word'>, { input: IWord }>(addWord, { input }).toPromise()
 
@@ -86,29 +77,38 @@ export const addWordAtom = atom(null, async (_get, _set, input: IWord) => {
   }
 })
 
-const addChapter = gql/* GraphQL */ `
-  input ChapterInput {
-    dict: String!
-    chapter: Int
-    timeStamp: Int!
-    time: Int!
-    correctCount: Int!
-    wrongCount: Int!
-    wordCount: Int!
-    correctWordIndexes: [Int!]!
-    wordNumber: Int!
-    wordRecordIds: [Int!]!
+export const addWordSelector = (
+  state: Pick<IWordRecord, 'word' | 'wrongCount' | 'mistakes'> & { letterTimeArray: number[] },
+): Omit<IWord, 'dict' | 'chapter'> => {
+  const { mistakes, letterTimeArray, ...rest } = state
+  const mistakesArray: IMistakes[] = Object.entries(mistakes).map(([index, mistakes]) => ({ index: Number(index), mistakes }))
+  const timing: number[] = []
+  for (let i = 1; i < letterTimeArray.length; i++) {
+    const diff = letterTimeArray[i] - letterTimeArray[i - 1]
+    timing.push(diff)
   }
-  mutation MyMutation($chapter: ChapterInput!) {
-    addChapter(input: $chapter) {
+
+  return {
+    ...rest,
+    mistakes: mistakesArray,
+    timeStamp: getUTCUnixTimestamp(),
+    timing,
+  }
+}
+
+const addChapter = gql/* GraphQL */ `
+  mutation AddChapter($input: ChapterInput!) {
+    addChapter(input: $input) {
       dict
       chapter
     }
   }
 `
 
-export const addChapterAtom = atom(null, async (_get, _set, input: ICharpter) => {
-  if (!client) throw new Error(CLIENT_NOT_READY)
+export const addChapterAtom = atom(null, async (get, _set, input: ICharpter) => {
+  const host = get(initialWebhookUrl)
+  if (!host) return
+  if (!client) client = createClient(host)
 
   const result = await client.mutation<Pick<ICharpter, 'dict' | 'chapter'>, { input: ICharpter }>(addChapter, { input }).toPromise()
 
@@ -117,20 +117,38 @@ export const addChapterAtom = atom(null, async (_get, _set, input: ICharpter) =>
   }
 })
 
+export const addChapterSelector = (state: TypingState): Omit<ICharpter, 'dict' | 'chapter'> => {
+  const {
+    chapterData: { correctCount, wrongCount, wordCount, correctWordIndexes, words, wordRecordIds },
+    timerData: { time },
+  } = state
+
+  return {
+    time,
+    timeStamp: getUTCUnixTimestamp(),
+    correctCount,
+    wrongCount,
+    wordCount,
+    correctWordIndexes,
+    wordNumber: words.length,
+    wordRecordIds,
+  }
+}
+
 export const clientAtom = atom(
   (get) => {
     const host = get(initialWebhookUrl)
     if (client) return { client, host }
 
     if (host) {
-      client = new Client({ url: host, exchanges: [cacheExchange, fetchExchange] })
+      client = createClient(host)
       return { client, host }
     }
 
     return { client: null, host: '' }
   },
   async (get, set, url: string) => {
-    const newClient = new Client({ url, exchanges: [cacheExchange, fetchExchange] })
+    const newClient = createClient(url)
 
     await get(queryAtom)
 
@@ -138,3 +156,7 @@ export const clientAtom = atom(
     set(initialWebhookUrl, url)
   },
 )
+
+function createClient(host: string) {
+  return new Client({ url: host, exchanges: [cacheExchange, fetchExchange] })
+}

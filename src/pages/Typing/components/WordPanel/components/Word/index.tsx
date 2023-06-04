@@ -9,11 +9,13 @@ import { EXPLICIT_SPACE } from '@/constants'
 import useKeySounds from '@/hooks/useKeySounds'
 import { TypingContext, TypingStateActionType } from '@/pages/Typing/store'
 import { currentDictInfoAtom, isIgnoreCaseAtom, isShowAnswerOnHoverAtom, isTextSelectableAtom, pronunciationIsOpenAtom } from '@/store'
+import { currentChapterAtom, currentDictIdAtom } from '@/store'
+import { addWordAtom, addWordSelector } from '@/store/webhook'
 import type { Word } from '@/typings'
 import { getUtcStringForMixpanel, useMixPanelWordLogUploader } from '@/utils'
 import { useSaveWordRecord } from '@/utils/db'
 import type { LetterMistakes } from '@/utils/db/record'
-import { useAtomValue } from 'jotai'
+import { useAtomValue, useSetAtom } from 'jotai'
 import { useCallback, useContext, useEffect, useState } from 'react'
 import { useImmer } from 'use-immer'
 
@@ -61,11 +63,14 @@ export default function WordComponent({ word, onFinish }: { word: Word; onFinish
   const isIgnoreCase = useAtomValue(isIgnoreCaseAtom)
   const isShowAnswerOnHover = useAtomValue(isShowAnswerOnHoverAtom)
   const saveWordRecord = useSaveWordRecord()
+  const saveWordWebhook = useSetAtom(addWordAtom)
   const wordLogUploader = useMixPanelWordLogUploader(state)
   const [playKeySound, playBeepSound, playHintSound] = useKeySounds()
   const pronunciationIsOpen = useAtomValue(pronunciationIsOpenAtom)
   const [isHoveringWord, setIsHoveringWord] = useState(false)
   const currentLanguage = useAtomValue(currentDictInfoAtom).language
+  const currentChapter = useAtomValue(currentChapterAtom)
+  const dictID = useAtomValue(currentDictIdAtom)
 
   useEffect(() => {
     // run only when word changes
@@ -205,6 +210,16 @@ export default function WordComponent({ word, onFinish }: { word: Word; onFinish
         wrongCount: wordState.wrongCount,
         letterTimeArray: wordState.letterTimeArray,
         letterMistake: wordState.letterMistake,
+      })
+      saveWordWebhook({
+        ...addWordSelector({
+          word: word.name,
+          wrongCount: wordState.wrongCount,
+          letterTimeArray: wordState.letterTimeArray,
+          mistakes: wordState.letterMistake,
+        }),
+        dict: dictID,
+        chapter: currentChapter,
       })
 
       onFinish()
