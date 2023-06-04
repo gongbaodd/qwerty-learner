@@ -1,6 +1,7 @@
 import { clientAtom } from '@/store/webhook'
 import { useAtomValue } from 'jotai'
-import { FC, useCallback } from 'react'
+import type { FC } from 'react'
+import { useCallback } from 'react'
 import IconCloud from '~icons/tabler/cloud'
 import IconDown from '~icons/tabler/cloud-arrow-down'
 import IconUp from '~icons/tabler/cloud-arrow-up'
