@@ -1,6 +1,6 @@
-import { TypingState } from '@/pages/Typing/store'
+import type { TypingState } from '@/pages/Typing/store'
 import { getUTCUnixTimestamp } from '@/utils'
-import type { IChapterRecord, IWordRecord, LetterMistakes } from '@/utils/db/record'
+import type { IChapterRecord, IWordRecord } from '@/utils/db/record'
 import { Client, cacheExchange, fetchExchange, gql } from '@urql/core'
 import { atom } from 'jotai'
 import { atomWithStorage } from 'jotai/utils'
@@ -10,6 +10,10 @@ type IMistakes = { index: number; mistakes: string[] }
 type IWord = Omit<IWordRecord, 'mistakes'> & { mistakes: IMistakes[] }
 
 const initialWebhookUrl = atomWithStorage('webhookUrl', '')
+
+export const uploadAtom = atom(false)
+
+export const downloadAtom = atom(false)
 
 let client: Client | null = null
 
@@ -41,19 +45,33 @@ const query = gql/* GraphQL */ `
     }
   }
 `
-export const queryAtom = atom(null, async (get) => {
-  const host = get(initialWebhookUrl)
 
-  if (!host) return
+type IQueryData = { chapters: ICharpter[]; words: IWord[] }
 
-  if (!client) client = createClient(host)
+let queryData: IQueryData | null = null
 
-  const result = await client.query<{ chapters: ICharpter[]; words: IWord[] }>(query, {}).toPromise()
+export const queryAtom = atom(
+  () => queryData,
+  async (get, set) => {
+    const host = get(initialWebhookUrl)
 
-  if (result.error) {
-    throw result.error
-  }
-})
+    if (!host) return
+
+    if (!client) client = createClient(host)
+
+    set(downloadAtom, true)
+
+    const result = await client.query<IQueryData>(query, {}).toPromise()
+
+    set(downloadAtom, false)
+
+    if (result.error) {
+      throw result.error
+    }
+
+    queryData = result.data ?? queryData
+  },
+)
 
 const addWord = gql/* GraphQL */ `
   mutation AddWord($input: WordInput!) {
@@ -63,14 +81,14 @@ const addWord = gql/* GraphQL */ `
   }
 `
 
-export const addWordAtom = atom(null, async (get, _set, input: IWord) => {
+export const addWordAtom = atom(null, async (get, set, input: IWord) => {
   const host = get(initialWebhookUrl)
   if (!host) return
   if (!client) client = createClient(host)
 
-  console.log(input)
-
+  set(uploadAtom, true)
   const result = await client.mutation<Pick<IWord, 'word'>, { input: IWord }>(addWord, { input }).toPromise()
+  set(uploadAtom, false)
 
   if (result.error) {
     throw result.error
@@ -105,12 +123,14 @@ const addChapter = gql/* GraphQL */ `
   }
 `
 
-export const addChapterAtom = atom(null, async (get, _set, input: ICharpter) => {
+export const addChapterAtom = atom(null, async (get, set, input: ICharpter) => {
   const host = get(initialWebhookUrl)
   if (!host) return
   if (!client) client = createClient(host)
 
+  set(uploadAtom, true)
   const result = await client.mutation<Pick<ICharpter, 'dict' | 'chapter'>, { input: ICharpter }>(addChapter, { input }).toPromise()
+  set(uploadAtom, false)
 
   if (result.error) {
     throw result.error
