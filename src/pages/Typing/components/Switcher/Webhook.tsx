@@ -20,8 +20,6 @@ export const WebhookState: FC = () => {
 
   useEffect(() => {
     if (query) {
-      setUpdatingDB(true)
-
       Promise.all([db.chapterRecords.clear(), db.wordRecords.clear()]).then(() => {
         query.chapters.forEach(async (chapter) => {
           await db.chapterRecords.put({

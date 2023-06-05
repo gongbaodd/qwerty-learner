@@ -48,10 +48,10 @@ const query = gql/* GraphQL */ `
 
 type IQueryData = { chapters: ICharpter[]; words: IWord[] }
 
-let queryData: IQueryData | null = null
+const queryData = atom<IQueryData | null>(null)
 
 export const queryAtom = atom(
-  () => queryData,
+  (get) => get(queryData),
   async (get, set) => {
     const host = get(initialWebhookUrl)
 
@@ -69,7 +69,7 @@ export const queryAtom = atom(
       throw result.error
     }
 
-    queryData = result.data ?? queryData
+    set(queryData, result.data ?? get(queryData))
   },
 )
 
