@@ -81,17 +81,19 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!typingElementRef.current) return
 
+    const element = typingElementRef.current
+
     if (!state.isTyping) {
-      typingElementRef.current.focus()
+      element.focus()
       const onKeyDown = (e: KeyboardEvent) => {
         if (!isLoading && e.key !== 'Enter' && (isLegal(e.key) || e.key === ' ') && !e.altKey && !e.ctrlKey && !e.metaKey) {
           e.preventDefault()
           dispatch({ type: TypingStateActionType.SET_IS_TYPING, payload: true })
         }
       }
-      typingElementRef.current.addEventListener('keydown', onKeyDown)
+      element.addEventListener('keydown', onKeyDown)
 
-      return () => typingElementRef.current?.removeEventListener('keydown', onKeyDown)
+      return () => element?.removeEventListener('keydown', onKeyDown)
     }
   }, [state.isTyping, isLoading, dispatch])
 
@@ -134,57 +136,55 @@ const App: React.FC = () => {
   useConfetti(state.isFinished)
 
   return (
-    <TypingContext.Provider value={{ state: state, dispatch }}>
-      <StarCard />
-      {state.isFinished && <ResultScreen />}
-      <Layout>
-        <Header>
-          <Tooltip content="词典章节切换">
-            <NavLink
-              className="block rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out hover:bg-indigo-400 hover:text-white focus:outline-none dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
-              to="/gallery"
-            >
-              {currentDictInfo.name} 第 {currentChapter + 1} 章
-            </NavLink>
-          </Tooltip>
-          <PronunciationSwitcher />
-          <Switcher />
-          <StartButton isLoading={isLoading} />
-          <Tooltip content="跳过该词">
-            <button
-              className={`${
-                state.isShowSkip ? 'bg-orange-400' : 'invisible w-0 bg-gray-300 px-0 opacity-0'
-              } btn-primary transition-all duration-300 `}
-              onClick={skipWord}
-            >
-              Skip
-            </button>
-          </Tooltip>
-        </Header>
-        <div
-          ref={typingElementRef}
-          tabIndex={0}
-          className="container mx-auto flex h-full flex-1 flex-col items-center justify-center pb-20 outline-none"
-        >
-          <div className="container relative mx-auto flex h-full flex-col items-center">
-            <div className="container flex flex-grow items-center justify-center">
-              {isLoading ? (
-                <div className="flex flex-col items-center justify-center ">
-                  <div
-                    className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid  border-indigo-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
-                    role="status"
-                  ></div>
-                </div>
-              ) : (
-                !state.isFinished && <WordPanel />
-              )}
+    <div ref={typingElementRef} tabIndex={0} className="outline-none">
+      <TypingContext.Provider value={{ state: state, dispatch }}>
+        <StarCard />
+        {state.isFinished && <ResultScreen />}
+        <Layout>
+          <Header>
+            <Tooltip content="词典章节切换">
+              <NavLink
+                className="block rounded-lg px-3 py-1 text-lg transition-colors duration-300 ease-in-out hover:bg-indigo-400 hover:text-white focus:outline-none dark:text-white dark:text-opacity-60 dark:hover:text-opacity-100"
+                to="/gallery"
+              >
+                {currentDictInfo.name} 第 {currentChapter + 1} 章
+              </NavLink>
+            </Tooltip>
+            <PronunciationSwitcher />
+            <Switcher />
+            <StartButton isLoading={isLoading} />
+            <Tooltip content="跳过该词">
+              <button
+                className={`${
+                  state.isShowSkip ? 'bg-orange-400' : 'invisible w-0 bg-gray-300 px-0 opacity-0'
+                } btn-primary transition-all duration-300 `}
+                onClick={skipWord}
+              >
+                Skip
+              </button>
+            </Tooltip>
+          </Header>
+          <div className="container mx-auto flex h-full flex-1 flex-col items-center justify-center pb-20">
+            <div className="container relative mx-auto flex h-full flex-col items-center">
+              <div className="container flex flex-grow items-center justify-center">
+                {isLoading ? (
+                  <div className="flex flex-col items-center justify-center ">
+                    <div
+                      className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid  border-indigo-400 border-r-transparent align-[-0.125em] motion-reduce:animate-[spin_1.5s_linear_infinite]"
+                      role="status"
+                    ></div>
+                  </div>
+                ) : (
+                  !state.isFinished && <WordPanel />
+                )}
+              </div>
+              <Speed />
             </div>
-            <Speed />
           </div>
-        </div>
-      </Layout>
-      <WordList />
-    </TypingContext.Provider>
+        </Layout>
+        <WordList />
+      </TypingContext.Provider>
+    </div>
   )
 }
 
